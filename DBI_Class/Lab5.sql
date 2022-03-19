@@ -80,12 +80,12 @@ use ProductOrders
 		create procedure SP_UsingTryCatch
 		AS 
 		BEGIN TRY
-			select 1 /0 as Error
+			insert into Customers values
+			('KH100','Nguyen Van A', 'Ha noi','0345678912','')
 		END TRY
 
 		BEGIN CATCH
-		select
-			ERROR_LINE() AS ErrorLine;
+			print 'Something wrong'
 		END CATCH
 
 		exec SP_UsingTryCatch
@@ -207,18 +207,14 @@ c.	Calculate the number of orders of the given customer and return
 			SELECT i.* INTO #temp1 FROM inserted i JOIN Products p
 			ON i.ProductCode = p.ProductCode
 			WHERE i.SellPrice < p.Price
-
 		-- Tạo bảng tạm #temp2 lưu trữ những inserted của những update mà SellPrice > Price
 			SELECT * INTO #temp2 FROM inserted i JOIN Products p
 			ON i.ProductCode = p.ProductCode
 			WHERE i.SellPrice >= p.Price
-
 		-- Khai báo biến @count
 			DECLARE @count int = (SELECT count(*) FROM #temp1)
-
 		-- #temp1 có thì không update 
 			IF @count > 0 PRINT 'UPDATE NOT SUCCESS'
-
 		--	#temp1 không có dòng nào thì ta sẽ update dùng 
 		--  dữ liệu ở bảng temp2 update cho OrderItems
 			ELSE 
@@ -227,7 +223,7 @@ c.	Calculate the number of orders of the given customer and return
 					WHILE (SELECT COUNT(*) FROM #temp2) > 0
 					BEGIN
 					 -- Chọn ra TOP 1 của bảng #Temp2
-						SELECT TOP 1 @OrderId = OrderID,@ProductCode = ProductCode,@SellPrice = SellPrice  FROM #temp2
+						SELECT TOP 1 OrderId = @OrderID,ProductCode = @ProductCode,SellPrice = @SellPrice  FROM #temp2
 					 -- UPDATE 
 						UPDATE OrderItems SET SellPrice = @SellPrice WHERE  OrderID = @OrderId and ProductCode = @ProductCode
 					 -- Xóa đối tượng vừa Update
@@ -235,7 +231,7 @@ c.	Calculate the number of orders of the given customer and return
 					END
 				END
 	END
---5.Trigger for the insertion of a product into an order (insert into OrderItems):
+--4.Trigger for the insertion of a product into an order (insert into OrderItems):
 --If Quantity > StockQuantity, then refuse the insertion.
 create trigger trg_4 on OderItems
 after insert
@@ -249,6 +245,7 @@ begin
 		print 'Khong insert vao bang OrderItems do Quantity > StockQuatity'
 		rollback 
 	end
---If Quantity <= StockQuantity, then update the StockQuantity of the corresponding product (StockQuantity = StockQuantity - Quantity)
+--If Quantity <= StockQuantity, then update the StockQuantity of the corresponding product 
+--(StockQuantity = StockQuantity - Quantity)
 
 
